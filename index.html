@@ -2,53 +2,99 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Ayoub TV - Classic Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayoub TV - Pro Panel V2</title>
     <style>
-        body { background-color: #0f172a; color: white; padding: 20px; font-family: sans-serif; }
-        .card { background: #1e293b; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: white; }
-        button { width: 100%; padding: 12px; background: #10b981; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; }
+        :root { --bg-color: #0f172a; --card-bg: #1e293b; --accent-green: #10b981; --accent-red: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .config-card, .channel-card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+        input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #fff; }
+        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        button { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-start { background: var(--accent-green); color: white; }
+        .btn-stop { background: var(--accent-red); color: white; }
+        .btn-clear { background: #64748b; color: white; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <input type="password" id="token" placeholder="GitHub Token">
-        <input type="text" id="user" placeholder="Username" value="omaimazaara2007-star">
-        <input type="text" id="repo" placeholder="Repo Name" value="live">
-    </div>
-    <div class="card">
-        <input type="text" id="channel" placeholder="رقم القناة">
-        <input type="text" id="url" placeholder="رابط البث m3u8">
-        <input type="text" id="key" placeholder="Stream Key">
-        <button onclick="send('start')">إطلاق (Start)</button>
-        <button onclick="send('stop')" style="background:#ef4444; margin-top:10px;">إيقاف (Stop)</button>
+    <div class="container">
+        <h1>📡 لوحة تحكم Ayoub TV</h1>
+        <div class="config-card">
+            <h2>🔑 الإعدادات العامة</h2>
+            <input type="password" id="githubToken" placeholder="GitHub Token" oninput="saveData()">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+                <input type="text" id="githubUser" value="omaimazaara2007-star" oninput="saveData()">
+                <input type="text" id="githubRepo" value="live" oninput="saveData()">
+            </div>
+        </div>
+        <div id="channelsContainer"></div>
     </div>
 
     <script>
-        async function send(action) {
-            const token = document.getElementById('token').value;
-            const user = document.getElementById('user').value;
-            const repo = document.getElementById('repo').value;
-            const channel = document.getElementById('channel').value;
-            const url = document.getElementById('url').value;
-            const key = document.getElementById('key').value;
+        const container = document.getElementById('channelsContainer');
+        
+        // تحميل البيانات عند فتح الصفحة
+        window.onload = () => {
+            document.getElementById('githubToken').value = localStorage.getItem('token') || '';
+            for (let i = 1; i <= 7; i++) {
+                container.innerHTML += `
+                <div class="channel-card">
+                    <h3>📺 القناة رقم ${i}</h3>
+                    <input type="text" id="stream-${i}" placeholder="رابط البث m3u8" oninput="saveData()">
+                    <input type="password" id="key-${i}" placeholder="Stream Key" oninput="saveData()" style="margin-top:10px;">
+                    <div class="btn-group">
+                        <button class="btn-start" onclick="trigger(${i}, 'start')">إطلاق</button>
+                        <button class="btn-stop" onclick="trigger(${i}, 'stop')">إيقاف</button>
+                        <button class="btn-clear" onclick="clearData(${i})">حذف</button>
+                    </div>
+                </div>`;
+                document.getElementById(`stream-${i}`).value = localStorage.getItem(`stream-${i}`) || '';
+                document.getElementById(`key-${i}`).value = localStorage.getItem(`key-${i}`) || '';
+            }
+        };
 
-            const res = await fetch(`https://api.github.com/repos/${user}/${repo}/actions/workflows/stream.yml/dispatches`, {
+        function saveData() {
+            localStorage.setItem('token', document.getElementById('githubToken').value);
+            for (let i = 1; i <= 7; i++) {
+                localStorage.setItem(`stream-${i}`, document.getElementById(`stream-${i}`).value);
+                localStorage.setItem(`key-${i}`, document.getElementById(`key-${i}`).value);
+            }
+        }
+
+        function clearData(i) {
+            document.getElementById(`stream-${i}`).value = '';
+            document.getElementById(`key-${i}`).value = '';
+            saveData();
+            alert(`🧹 تم حذف بيانات القناة ${i}`);
+        }
+
+        async function trigger(channelNum, action) {
+            const token = document.getElementById('githubToken').value;
+            const user = document.getElementById('githubUser').value;
+            const repo = document.getElementById('githubRepo').value;
+            
+            const url = `https://api.github.com/repos/${user}/${repo}/actions/workflows/stream.yml/dispatches`;
+            
+            const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({
                     ref: 'main',
                     inputs: {
                         action_type: action,
-                        channel_id: channel,
-                        m3u8_url: url,
-                        stream_key: key
+                        channel_id: channelNum.toString(),
+                        m3u8_url: document.getElementById(`stream-${channelNum}`).value,
+                        stream_key: document.getElementById(`key-${channelNum}`).value
                     }
                 })
             });
 
-            if (res.ok) alert('تم الإرسال بنجاح!');
-            else alert('خطأ في الاتصال!');
+            if (response.status === 204) alert(`✅ تم إرسال أمر ${action} للقناة ${channelNum}`);
+            else alert('❌ خطأ! تأكد من البيانات والـ Token');
         }
     </script>
 </body>
