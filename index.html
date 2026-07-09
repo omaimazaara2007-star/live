@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayoub TV - Pro Panel V2</title>
+    <title>Ayoub TV - Pro Live Panel</title>
     <style>
         :root { --bg-color: #0f172a; --card-bg: #1e293b; --accent-green: #10b981; --accent-red: #ef4444; --text-main: #f8fafc; --text-muted: #94a3b8; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
@@ -11,24 +11,19 @@
         .container { max-width: 800px; margin: 0 auto; }
         .config-card, .channel-card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
         input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #fff; }
-        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
         button { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-start { background: var(--accent-green); color: white; }
-        .btn-stop { background: var(--accent-red); color: white; }
-        .btn-clear { background: #64748b; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📡 لوحة تحكم Ayoub TV</h1>
+        <h1>📡 لوحة التحكم الاحترافية - Ayoub TV</h1>
         <div class="config-card">
-            <h2>🔑 الإعدادات العامة</h2>
-            <input type="password" id="githubToken" placeholder="GitHub Token" oninput="saveData()">
+            <input type="password" id="githubToken" placeholder="GitHub Token" oninput="saveAll()">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
-                <input type="text" id="githubUser" value="omaimazaara2007-star" oninput="saveData()">
-                <input type="text" id="githubRepo" value="live" oninput="saveData()">
+                <input type="text" id="githubUser" value="omaimazaara2007-star" oninput="saveAll()">
+                <input type="text" id="githubRepo" value="live" oninput="saveAll()">
             </div>
         </div>
         <div id="channelsContainer"></div>
@@ -36,65 +31,57 @@
 
     <script>
         const container = document.getElementById('channelsContainer');
-        
-        // تحميل البيانات عند فتح الصفحة
+        for (let i = 1; i <= 7; i++) {
+            container.innerHTML += `
+            <div class="channel-card">
+                <h3>📺 القناة رقم ${i}</h3>
+                <input type="text" id="stream-${i}" placeholder="رابط m3u8" oninput="saveAll()" style="margin: 5px 0;">
+                <input type="password" id="key-${i}" placeholder="Stream Key" oninput="saveAll()">
+                <div class="btn-group">
+                    <button class="btn-start" onclick="trigger(${i}, 'start')" style="background:var(--accent-green); color:white;">إطلاق 🚀</button>
+                    <button class="btn-stop" onclick="trigger(${i}, 'stop')" style="background:var(--accent-red); color:white;">إيقاف 🛑</button>
+                    <button onclick="clearCh(${i})" style="background:#64748b; color:white;">حذف 🧹</button>
+                </div>
+            </div>`;
+        }
+
+        function saveAll() {
+            localStorage.setItem('token', document.getElementById('githubToken').value);
+            localStorage.setItem('user', document.getElementById('githubUser').value);
+            localStorage.setItem('repo', document.getElementById('githubRepo').value);
+            for (let i = 1; i <= 7; i++) {
+                localStorage.setItem(`s-${i}`, document.getElementById(`stream-${i}`).value);
+                localStorage.setItem(`k-${i}`, document.getElementById(`key-${i}`).value);
+            }
+        }
+
+        function clearCh(i) {
+            document.getElementById(`stream-${i}`).value = '';
+            document.getElementById(`key-${i}`).value = '';
+            saveAll();
+        }
+
         window.onload = () => {
             document.getElementById('githubToken').value = localStorage.getItem('token') || '';
+            document.getElementById('githubUser').value = localStorage.getItem('user') || 'omaimazaara2007-star';
+            document.getElementById('githubRepo').value = localStorage.getItem('repo') || 'live';
             for (let i = 1; i <= 7; i++) {
-                container.innerHTML += `
-                <div class="channel-card">
-                    <h3>📺 القناة رقم ${i}</h3>
-                    <input type="text" id="stream-${i}" placeholder="رابط البث m3u8" oninput="saveData()">
-                    <input type="password" id="key-${i}" placeholder="Stream Key" oninput="saveData()" style="margin-top:10px;">
-                    <div class="btn-group">
-                        <button class="btn-start" onclick="trigger(${i}, 'start')">إطلاق</button>
-                        <button class="btn-stop" onclick="trigger(${i}, 'stop')">إيقاف</button>
-                        <button class="btn-clear" onclick="clearData(${i})">حذف</button>
-                    </div>
-                </div>`;
-                document.getElementById(`stream-${i}`).value = localStorage.getItem(`stream-${i}`) || '';
-                document.getElementById(`key-${i}`).value = localStorage.getItem(`key-${i}`) || '';
+                document.getElementById(`stream-${i}`).value = localStorage.getItem(`s-${i}`) || '';
+                document.getElementById(`key-${i}`).value = localStorage.getItem(`k-${i}`) || '';
             }
         };
 
-        function saveData() {
-            localStorage.setItem('token', document.getElementById('githubToken').value);
-            for (let i = 1; i <= 7; i++) {
-                localStorage.setItem(`stream-${i}`, document.getElementById(`stream-${i}`).value);
-                localStorage.setItem(`key-${i}`, document.getElementById(`key-${i}`).value);
-            }
-        }
-
-        function clearData(i) {
-            document.getElementById(`stream-${i}`).value = '';
-            document.getElementById(`key-${i}`).value = '';
-            saveData();
-            alert(`🧹 تم حذف بيانات القناة ${i}`);
-        }
-
-        async function trigger(channelNum, action) {
+        async function trigger(i, action) {
             const token = document.getElementById('githubToken').value;
-            const user = document.getElementById('githubUser').value;
-            const repo = document.getElementById('githubRepo').value;
-            
-            const url = `https://api.github.com/repos/${user}/${repo}/actions/workflows/stream.yml/dispatches`;
-            
-            const response = await fetch(url, {
+            const res = await fetch(`https://api.github.com/repos/${document.getElementById('githubUser').value}/${document.getElementById('githubRepo').value}/actions/workflows/stream.yml/dispatches`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({
                     ref: 'main',
-                    inputs: {
-                        action_type: action,
-                        channel_id: channelNum.toString(),
-                        m3u8_url: document.getElementById(`stream-${channelNum}`).value,
-                        stream_key: document.getElementById(`key-${channelNum}`).value
-                    }
+                    inputs: { action_type: action, channel_id: i.toString(), m3u8_url: document.getElementById(`stream-${i}`).value, stream_key: document.getElementById(`key-${i}`).value }
                 })
             });
-
-            if (response.status === 204) alert(`✅ تم إرسال أمر ${action} للقناة ${channelNum}`);
-            else alert('❌ خطأ! تأكد من البيانات والـ Token');
+            res.status === 204 ? alert('✅ تم!') : alert('❌ خطأ!');
         }
     </script>
 </body>
