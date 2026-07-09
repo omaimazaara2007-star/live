@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayoub TV - Pro Live Panel v3</title>
+    <title>Ayoub TV - Pro Live Panel v4</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -41,8 +41,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>📡 لوحة التحكم الاحترافية V3 - Ayoub TV</h1>
-        <p class="subtitle">تعديل كامل للمعلومات، إيقاف القنوات، وحفظ ذكي لبيانات البث</p>
+        <h1>📡 لوحة التحكم الاحترافية V4 - Ayoub TV</h1>
+        <p class="subtitle">إصلاح شامل لطلبات الإرسال وحفظ ذكي ومستقر</p>
         
         <div class="config-card">
             <h2>🔑 مفاتيح الربط بـ GitHub</h2>
@@ -86,7 +86,7 @@
                     </div>
                     <div class="btn-group">
                         <button class="btn-start" onclick="triggerWorkflow(${i}, 'start')">إطلاق 🚀</button>
-                        <button class="btn-stop" onclick="triggerWorkflow(${i}, 'إيقاف 🛑')">إيقاف 🛑</button>
+                        <button class="btn-stop" onclick="triggerWorkflow(${i}, 'stop')">إيقاف 🛑</button>
                         <button class="btn-update" onclick="clearChannel(${i})">تعديل/مسح ⚙️</button>
                     </div>
                 </div>
@@ -97,7 +97,6 @@
             localStorage.setItem(key, value);
         }
 
-        // دالة لمسح أو تعديل معلومات القناة وإعادة ضبطها
         function clearChannel(channelNum) {
             if (confirm(`واش بغيتي تمسح معلومات القناة رقم ${channelNum} باش تعدلها؟`)) {
                 document.getElementById(`stream-${channelNum}`).value = '';
@@ -106,7 +105,7 @@
                 localStorage.removeItem(`key-${channelNum}`);
                 localStorage.setItem(`status-${channelNum}`, 'inactive');
                 document.getElementById(`dot-${channelNum}`).className = 'status-dot';
-                alert(`🧹 تم تفريغ القناة ${channelNum}، تقدر تدخل المعلومات الجديدة دابا.`);
+                alert(`🧹 تم التحديث، تقدر تدخل البيانات الجديدة.`);
             }
         }
 
@@ -149,7 +148,7 @@
                         ref: 'main',
                         inputs: {
                             channel: channelNum.toString(),
-                            action: action === 'start' ? 'start' : 'stop',
+                            action: action,
                             stream_url: streamUrl,
                             stream_key: streamKey
                         }
@@ -166,11 +165,10 @@
                         localStorage.setItem(`status-${channelNum}`, 'inactive');
                     }
                 } else {
-                    alert('❌ خطأ ف الاتصال بـ GitHub!');
+                    alert('❌ خطأ ف الاتصال بـ GitHub! تأكد من البيانات الفوق.');
                 }
             } catch (error) { alert('حدث خطأ.'); }
         }
     </script>
 </body>
 </html>
-
