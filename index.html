@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayoub TV - Pro Live Panel</title>
+    <style>
+        :root { --bg-main: #0f172a; --bg-card: #1e293b; --primary: #38bdf8; --success: #10b981; --danger: #f43f5e; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { color: var(--primary); font-size: 28px; margin-bottom: 5px; }
+        p.subtitle { color: #94a3b8; margin-bottom: 25px; }
+        .config-box { background: var(--bg-card); padding: 20px; border-radius: 12px; border: 1px solid #334155; margin-bottom: 20px; text-align: right; }
+        .config-box input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 12px; border-radius: 6px; border: 1px solid #475569; background: var(--bg-main); color: #fff; box-sizing: border-box; }
+        .channel-card { background: var(--bg-card); border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; text-align: right; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .channel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+        .channel-title { font-weight: bold; font-size: 18px; color: var(--primary); }
+        .channel-inputs { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        @media(min-width: 600px) { .channel-inputs { grid-template-columns: 1fr 1fr; } }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-size: 13px; color: #94a3b8; margin-bottom: 4px; }
+        .channel-inputs input { padding: 10px; border-radius: 6px; border: 1px solid #475569; background: var(--bg-main); color: #fff; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; color: #fff; }
+        .btn-start { background: var(--success); }
+        .btn-start:hover { background: #059669; }
+        .btn-stop { background: var(--danger); }
+        .btn-stop:hover { background: #e11d48; }
+        #global-status { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 8px; background: #0284c7; font-weight: bold; display: none; z-index: 1000; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📡 لـوحة التحكم الاحترافية - Ayoub TV</h1>
+    <p class="subtitle">إطلاق وتعديل وإيقاف حتى 7 لايفات مستقلة عبر GitHub Actions</p>
+
+    <div class="config-box">
+        <label>🔑 GitHub Personal Access Token (Classic):</label>
+        <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxx">
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;">
+                <label>👤 Username (إسم الحساب):</label>
+                <input type="text" id="gh-user" placeholder="مثال: ayoub-dev">
+            </div>
+            <div style="flex: 1;">
+                <label>📦 Repository Name (إسم الريبو):</label>
+                <input type="text" id="gh-repo" placeholder="مثال: live-stream">
+            </div>
+        </div>
+    </div>
+
+    <div id="channels-container"></div>
+</div>
+
+<div id="global-status">⏳ جاري معالجة الطلب...</div>
+
+<script>
+const container = document.getElementById('channels-container');
+for (let i = 1; i <= 7; i++) {
+    container.innerHTML += `
+        <div class="channel-card">
+            <div class="channel-header">
+                <span class="channel-title">📺 القناة رقم ${i}</span>
+                <span id="status-badge-${i}" style="font-size:12px; color:#94a3b8;">⚪ جاهزة</span>
+            </div>
+            <div class="channel-inputs">
+                <div class="input-group">
+                    <label>رابط البث (m3u8):</label>
+                    <input type="text" id="m3u8-${i}" placeholder="https://example.com/stream.m3u8">
+                </div>
+                <div class="input-group">
+                    <label>Facebook Stream Key:</label>
+                    <input type="text" id="key-${i}" placeholder="FB-xxxxxxxxxxxx">
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn-start" onclick="triggerStream(${i}, 'start')">إطلاق القناة ${i} 🚀</button>
+                <button class="btn-stop" onclick="triggerStream(${i}, 'stop')">إيقاف القناة ${i} 🛑</button>
+            </div>
+        </div>
+    `;
+}
+
+async function triggerStream(channelId, action) {
+    const token = document.getElementById('gh-token').value;
+    const username = document.getElementById('gh-user').value;
+    const repo = document.getElementById('gh-repo').value;
+    const m3u8 = document.getElementById(`m3u8-${channelId}`).value;
+    const key = document.getElementById(`key-${channelId}`).value;
+    const globalStatus = document.getElementById('global-status');
+    const badge = document.getElementById(`status-badge-${channelId}`);
+
+    if (!token || !username || !repo) {
+        alert('عافاك عمر معلومات الحساب ديال GitHub الفوق أولاً!');
+        return;
+    }
+
+    if (action === 'start' && (!m3u8 || !key)) {
+        alert(`عافاك عمر خانات القناة ${channelId} قبل ما تطلقها!`);
+        return;
+    }
+
+    globalStatus.style.display = 'block';
+    globalStatus.innerText = `⏳ جاري إرسال أمر (${action === 'start' ? 'التشغيل' : 'الإيقاف'}) للقناة ${channelId}...`;
+
+    const url = `https://api.github.com/repos/${username}/${repo}/actions/workflows/stream.yml/dispatches`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'Content-Type': 'application/vnd.github+json'
+            },
+            body: JSON.stringify({
+                ref: 'main',
+                inputs: {
+                    action_type: action,
+                    channel_id: String(channelId),
+                    m3u8_url: m3u8,
+                    stream_key: key
+                }
+            })
+        });
+
+        if (response.status === 204) {
+            globalStatus.innerText = `🟢 ناضي! تم إرسال الأمر بنجاح.`;
+            if(action === 'start') {
+                badge.innerText = '🟢 شغال في GitHub';
+                badge.style.color = '#10b981';
+            } else {
+                badge.innerText = '🛑 متوقف';
+                badge.style.color = '#f43f5e';
+            }
+        } else {
+            globalStatus.innerText = `❌ خطأ: ${response.status}`;
+            alert('تأكد من الـ Token أو معلومات الـ Repo.');
+        }
+    } catch (e) {
+        globalStatus.innerText = '❌ مشكل ف الاتصال بالشبكة.';
+    }
+
+    setTimeout(() => { globalStatus.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
