@@ -2,129 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayoub TV - Pro Live Panel v4</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-blue: #38bdf8;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 10px; color: var(--accent-blue); font-size: 24px; }
-        p.subtitle { text-align: center; color: var(--text-muted); margin-bottom: 25px; font-size: 14px; }
-        .config-card, .channel-card { background: var(--card-bg); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .config-card h2, .channel-card h3 { font-size: 16px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
-        input { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: #fff; font-size: 14px; }
-        input:focus { border-color: var(--accent-blue); outline: none; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
-        button { padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: background 0.2s; }
-        .btn-start { background: var(--accent-green); color: white; }
-        .btn-start:hover { background: #059669; }
-        .btn-stop { background: var(--accent-red); color: white; }
-        .btn-stop:hover { background: #dc2626; }
-        .btn-update { background: #475569; color: white; }
-        .btn-update:hover { background: #334155; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; display: inline-block; }
-        .status-active { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .channel-header { display: flex; justify-content: space-between; align-items: center; }
-    </style>
+    <title>Ayoub TV - Pro Live Panel v5</title>
+    <!-- CSS كاين ف الكود اللي صيفطت ليك قبل، غي نسخ هاد السكربت لتحت -->
 </head>
 <body>
-    <div class="container">
-        <h1>📡 لوحة التحكم الاحترافية V4 - Ayoub TV</h1>
-        <p class="subtitle">إصلاح شامل لطلبات الإرسال وحفظ ذكي ومستقر</p>
-        
-        <div class="config-card">
-            <h2>🔑 مفاتيح الربط بـ GitHub</h2>
-            <div class="form-group">
-                <label>GitHub Personal Access Token (Classic)</label>
-                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxx" oninput="saveData('githubToken', this.value)">
-            </div>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Username (إسم الحساب)</label>
-                    <input type="text" id="githubUser" oninput="saveData('githubUser', this.value)">
-                </div>
-                <div class="form-group">
-                    <label>Repository Name (إسم الريبو)</label>
-                    <input type="text" id="githubRepo" oninput="saveData('githubRepo', this.value)">
-                </div>
-            </div>
-        </div>
-
-        <div id="channelsContainer"></div>
-    </div>
-
+    <!-- (نفس الواجهة) -->
     <script>
-        const container = document.getElementById('channelsContainer');
-        for (let i = 1; i <= 7; i++) {
-            container.innerHTML += `
-                <div class="channel-card">
-                    <div class="channel-header">
-                        <h3>📺 القناة رقم ${i}</h3>
-                        <span class="status-dot" id="dot-${i}"></span>
-                    </div>
-                    <div class="grid-2" style="margin-top:10px;">
-                        <div class="form-group">
-                            <label>رابط البث (m3u8)</label>
-                            <input type="text" id="stream-${i}" placeholder="https://example.com/stream.m3u8" oninput="saveData('stream-${i}', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <label>Facebook Stream Key</label>
-                            <input type="password" id="key-${i}" placeholder="FB-xxxxxxxxxxxx" oninput="saveData('key-${i}', this.value)">
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button class="btn-start" onclick="triggerWorkflow(${i}, 'start')">إطلاق 🚀</button>
-                        <button class="btn-stop" onclick="triggerWorkflow(${i}, 'stop')">إيقاف 🛑</button>
-                        <button class="btn-update" onclick="clearChannel(${i})">تعديل/مسح ⚙️</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function saveData(key, value) {
-            localStorage.setItem(key, value);
-        }
-
-        function clearChannel(channelNum) {
-            if (confirm(`واش بغيتي تمسح معلومات القناة رقم ${channelNum} باش تعدلها؟`)) {
-                document.getElementById(`stream-${channelNum}`).value = '';
-                document.getElementById(`key-${channelNum}`).value = '';
-                localStorage.removeItem(`stream-${channelNum}`);
-                localStorage.removeItem(`key-${channelNum}`);
-                localStorage.setItem(`status-${channelNum}`, 'inactive');
-                document.getElementById(`dot-${channelNum}`).className = 'status-dot';
-                alert(`🧹 تم التحديث، تقدر تدخل البيانات الجديدة.`);
-            }
-        }
-
-        window.onload = function() {
-            document.getElementById('githubToken').value = localStorage.getItem('githubToken') || '';
-            document.getElementById('githubUser').value = localStorage.getItem('githubUser') || 'omaimazaara2007-star';
-            document.getElementById('githubRepo').value = localStorage.getItem('githubRepo') || 'live';
-            
-            for (let i = 1; i <= 7; i++) {
-                document.getElementById(`stream-${i}`).value = localStorage.getItem(`stream-${i}`) || '';
-                document.getElementById(`key-${i}`).value = localStorage.getItem(`key-${i}`) || '';
-                
-                const status = localStorage.getItem(`status-${i}`);
-                if (status === 'active') {
-                    document.getElementById(`dot-${i}`).className = 'status-dot status-active';
-                }
-            }
-        }
-
+        // ... (نفس الدوال السابقة)
+        
         async function triggerWorkflow(channelNum, action) {
             const token = document.getElementById('githubToken').value;
             const user = document.getElementById('githubUser').value;
@@ -132,17 +17,15 @@
             const streamUrl = document.getElementById(`stream-${channelNum}`).value;
             const streamKey = document.getElementById(`key-${channelNum}`).value;
 
-            if (!token) { alert('من فضلك دخل الـ Token أولاً!'); return; }
-            if (action === 'start' && (!streamUrl || !streamKey)) { alert('عمر رابط القناة والـ Stream Key!'); return; }
+            // هنا استعملنا رابط CORS Proxy باش ندوزو الطلب بلا مشاكل
+            const url = `https://corsproxy.io/?https://api.github.com/repos/${user}/${repo}/actions/workflows/stream.yml/dispatches`;
 
-            const url = `https://api.github.com/repos/${user}/${repo}/actions/workflows/stream.yml/dispatches`;
             try {
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github+json',
-                        'Content-Type': 'application/json'
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json'
                     },
                     body: JSON.stringify({
                         ref: 'main',
@@ -155,21 +38,13 @@
                     })
                 });
 
-                if (response.status === 204) {
-                    alert(`✅ تم إرسال أمر [${action === 'start' ? 'التشغيل' : 'الإيقاف'}] للقناة ${channelNum} بنجاح!`);
-                    if (action === 'start') {
-                        document.getElementById(`dot-${channelNum}`).className = 'status-dot status-active';
-                        localStorage.setItem(`status-${channelNum}`, 'active');
-                    } else {
-                        document.getElementById(`dot-${channelNum}`).className = 'status-dot';
-                        localStorage.setItem(`status-${channelNum}`, 'inactive');
-                    }
+                if (response.ok) {
+                    alert('✅ تمت العملية بنجاح!');
                 } else {
-                    alert('❌ خطأ ف الاتصال بـ GitHub! تأكد من البيانات الفوق.');
+                    alert('❌ فشل الاتصال! تأكد من الـ Token والاسم.');
                 }
-            } catch (error) { alert('حدث خطأ.'); }
+            } catch (error) { alert('خطأ ف الاتصال!'); }
         }
     </script>
 </body>
 </html>
-
