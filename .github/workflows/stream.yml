@@ -1,0 +1,31 @@
+name: Start Multi-Stream
+
+on:
+  workflow_dispatch:
+    inputs:
+      stream1_url: {description: 'URL 1', required: false}
+      stream1_key: {description: 'KEY 1', required: false}
+      stream2_url: {description: 'URL 2', required: false}
+      stream2_key: {description: 'KEY 2', required: false}
+
+jobs:
+  run-stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Start Streams
+        run: |
+          # تشغيل القناة الأولى إذا كانت موجودة
+          if [ -n "${{ github.event.inputs.stream1_url }}" ]; then
+            ffmpeg -re -i "${{ github.event.inputs.stream1_url }}" -c copy -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.stream1_key }}" &
+          fi
+          
+          # تشغيل القناة الثانية إذا كانت موجودة
+          if [ -n "${{ github.event.inputs.stream2_url }}" ]; then
+            ffmpeg -re -i "${{ github.event.inputs.stream2_url }}" -c copy -f flv "rtmps://live-api-s.facebook.com:443/rtmp/${{ github.event.inputs.stream2_key }}" &
+          fi
+          
+          # الانتظار باش ما يحبسش السكربت
+          wait
